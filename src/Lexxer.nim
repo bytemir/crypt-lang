@@ -1,5 +1,7 @@
 import std/strformat
 import std/strutils
+import std/monotimes
+import std/times
 
 type
     TokenType* = enum 
@@ -60,6 +62,7 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer) =
     echo "_________________________________________________________\n"
     echo "       \t\tLexical Analysis:"
     echo "_________________________________________________________\n"
+    let startTime = getMonoTime()
     while advanceChar(tokenizer) == false:
         case tokenizer.currentCharacter
             of ' ', '\t', '\r', '\n':
@@ -112,9 +115,11 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer) =
             else: 
                 echo &"[DEBUG] Discarding: '{tokenizer.currentCharacter}' at index {tokenizer.currentCharacterIndex} (Line {tokenizer.currentLineIndex})"
                 discard
-                
+    let endTime = getMonoTime() 
+    let duration = endTime - startTime
     echo "\n=================== Final Token Stream ==================="
     for idx, tok in tokenizer.tokenStream:
         echo &"[{idx}] Type: {tok.tokenType:<12} Value: \"{tok.value}\""
     echo "=========================================================="
+    echo &"Time taken for Lexical Analysis: {duration.inMicroseconds} microseconds ({duration.inMilliseconds} ms)"
     echo "_________________________________________________________"
