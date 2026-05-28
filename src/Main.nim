@@ -6,4 +6,4 @@ let lines = fileContent.splitLines()
 
 var TokenizerInstance = Lexxer.Tokenizer()
 TokenizerInstance.init(lines)
-TokenizerInstance.beginLexicalAnalysis()
+let tokenStream: seq[Token] = TokenizerInstance.beginLexicalAnalysis()

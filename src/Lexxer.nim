@@ -5,11 +5,34 @@ import std/times
 
 type
     TokenType* = enum 
-        SYNTAX
+        LPAREN
+        RPAREN
+
+        LBRACE
+        RBRACE
+
         EQUAL
-        NUMBER      
-        STRING      
-        IDENTIFIER  
+        DOUBLE_EQUAL
+        GREATER
+        GREATER_EQUAL
+        LESS
+        LESS_EQUAL
+
+        NUMBER  
+        STRING
+
+        IDENTIFIER
+
+        ADD
+        SUB
+        MUL
+        DIV
+
+        INCREMENT   
+        DECREMENT   
+
+        EOL
+        NONE
 
     Token* = object
         tokenType*: TokenType
@@ -44,8 +67,9 @@ proc advanceLine(tokenizer: var Tokenizer): bool =
         return false
 
 proc advanceChar(tokenizer: var Tokenizer): bool = 
-    if tokenizer.currentCharacterIndex + 1 >= tokenizer.currentLine.len: 
+    while tokenizer.currentCharacterIndex + 1 >= tokenizer.currentLine.len: 
         if advanceLine(tokenizer): return true
+        
     tokenizer.currentCharacterIndex += 1
     tokenizer.currentCharacter = tokenizer.currentLine[tokenizer.currentCharacterIndex]
     
@@ -58,7 +82,7 @@ proc emitToken(tokenizer: var Tokenizer, tokentype: TokenType, value: string) =
     
     echo &"[INFO] Emitted Token: {tokentype} (Value: \"{value}\")"
 
-proc beginLexicalAnalysis*(tokenizer: var Tokenizer) =
+proc beginLexicalAnalysis*(tokenizer: var Tokenizer): seq[Token] =
     echo "_________________________________________________________\n"
     echo "       \t\tLexical Analysis:"
     echo "_________________________________________________________\n"
@@ -68,8 +92,66 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer) =
             of ' ', '\t', '\r', '\n':
                 discard 
 
+            of '>': 
+                if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
+                   tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '=':
+                    discard advanceChar(tokenizer)
+                    tokenizer.emitToken(TokenType.GREATER_EQUAL, ">=")
+                else:
+                    tokenizer.emitToken(TokenType.GREATER, $tokenizer.currentCharacter) 
+                    
+            of '<': 
+                if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
+                   tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '=':
+                    discard advanceChar(tokenizer)
+                    tokenizer.emitToken(TokenType.LESS_EQUAL, "<=")
+                else:
+                    tokenizer.emitToken(TokenType.LESS, $tokenizer.currentCharacter) 
+                    
             of '=': 
-                tokenizer.emitToken(TokenType.EQUAL, $tokenizer.currentCharacter) 
+                if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
+                   tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '=':
+                    discard advanceChar(tokenizer)
+                    tokenizer.emitToken(TokenType.DOUBLE_EQUAL, "==")
+                else:
+                    tokenizer.emitToken(TokenType.EQUAL, $tokenizer.currentCharacter) 
+
+            of ';': 
+                tokenizer.emitToken(TokenType.EOL, $tokenizer.currentCharacter) 
+
+            of '+': 
+                if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
+                   tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '+':
+                    discard advanceChar(tokenizer)
+                    tokenizer.emitToken(TokenType.INCREMENT, "++")
+                else:
+                    tokenizer.emitToken(TokenType.ADD, $tokenizer.currentCharacter) 
+
+            of '-': 
+                if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
+                   tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '-':
+                    discard advanceChar(tokenizer)
+                    tokenizer.emitToken(TokenType.DECREMENT, "--")
+                else:
+                    tokenizer.emitToken(TokenType.SUB, $tokenizer.currentCharacter) 
+
+            of '*': 
+                tokenizer.emitToken(TokenType.MUL, $tokenizer.currentCharacter) 
+
+            of '/': 
+                tokenizer.emitToken(TokenType.DIV, $tokenizer.currentCharacter) 
+
+            of '(': 
+                tokenizer.emitToken(TokenType.LPAREN, $tokenizer.currentCharacter) 
+
+            of ')': 
+                tokenizer.emitToken(TokenType.RPAREN, $tokenizer.currentCharacter) 
+
+            of '{': 
+                tokenizer.emitToken(TokenType.LBRACE, $tokenizer.currentCharacter) 
+
+            of '}': 
+                tokenizer.emitToken(TokenType.RBRACE, $tokenizer.currentCharacter) 
 
             of '"':
                 var strBuffer = ""
@@ -123,3 +205,4 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer) =
     echo "=========================================================="
     echo &"Time taken for Lexical Analysis: {duration.inMicroseconds} microseconds ({duration.inMilliseconds} ms)"
     echo "_________________________________________________________"
+    return tokenizer.tokenStream
