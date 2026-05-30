@@ -6,3 +6,13 @@ x <= 2;
 x++;
 x--;
 x = 1 + 2;
+
+let exampleVector: Vec = [1,2];
+let exampleNumber: Float =  23.1;
+let exampleInteger: Int = 12;
+let exampleString: String = "Foo";
+
+
+let displacement: Float @m = 3;
+let velocity: Float @ms-1 = 2;
+let acceleration: Float @ms-2 = 1;

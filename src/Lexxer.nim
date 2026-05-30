@@ -11,6 +11,11 @@ type
         LBRACE
         RBRACE
 
+        LBRACKET
+        RBRACKET
+
+        SEPERATOR
+
         EQUAL
         DOUBLE_EQUAL
         GREATER
@@ -20,8 +25,10 @@ type
 
         NUMBER  
         STRING
+        DIMENSIONAL
 
         IDENTIFIER
+        TYPEOF
 
         ADD
         SUB
@@ -119,6 +126,21 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer): seq[Token] =
             of ';': 
                 tokenizer.emitToken(TokenType.EOL, $tokenizer.currentCharacter) 
 
+            of '[': 
+                tokenizer.emitToken(TokenType.LBRACKET, $tokenizer.currentCharacter) 
+
+            of ',': 
+                tokenizer.emitToken(TokenType.SEPERATOR, $tokenizer.currentCharacter) 
+
+            of ']': 
+                tokenizer.emitToken(TokenType.RBRACKET, $tokenizer.currentCharacter) 
+
+            of ':': 
+                tokenizer.emitToken(TokenType.TYPEOF, $tokenizer.currentCharacter) 
+
+            of '@': 
+                tokenizer.emitToken(TokenType.DIMENSIONAL, $tokenizer.currentCharacter) 
+
             of '+': 
                 if tokenizer.currentCharacterIndex + 1 < tokenizer.currentLine.len and 
                    tokenizer.currentLine[tokenizer.currentCharacterIndex + 1] == '+':
@@ -201,7 +223,7 @@ proc beginLexicalAnalysis*(tokenizer: var Tokenizer): seq[Token] =
     let duration = endTime - startTime
     echo "\n=================== Final Token Stream ==================="
     for idx, tok in tokenizer.tokenStream:
-        echo &"[{idx}] Type: {tok.tokenType:<12} Value: \"{tok.value}\""
+        echo &"[{idx}] Type: {tok.tokenType:<12}    Value: \"{tok.value}\""
     echo "=========================================================="
     echo &"Time taken for Lexical Analysis: {duration.inMicroseconds} microseconds ({duration.inMilliseconds} ms)"
     echo "_________________________________________________________"
